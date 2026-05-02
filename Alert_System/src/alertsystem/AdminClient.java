@@ -7,15 +7,14 @@ import java.util.Scanner;
 public class AdminClient {
 
     static final int SERVER_PORT = 6700;
-    static final int SO_TIMEOUT  = 5000; // 5 s wait for server reply
+    static final int SO_TIMEOUT = 5000; // 5 s wait for server reply
 
     public static void main(String[] args) {
-        String serverHost ; 
-        if (args.length >0 ) {
+        String serverHost;
+        if (args.length > 0) {
             serverHost = args[0];
-        }
-        else { 
-            serverHost = "localhost" ;
+        } else {
+            serverHost = "localhost";
         }
 
         DatagramSocket socket = null;
@@ -24,7 +23,8 @@ public class AdminClient {
         try {
             // Bind to any free local port so the server can send replies back
             socket = new DatagramSocket();
-            socket.setSoTimeout(SO_TIMEOUT);
+            socket.setSoTimeout(SO_TIMEOUT); // Sets receive timeout to 5 seconds. So socket.receive() will not block
+                                             // forever.
 
             System.out.println("Admin Client");
             System.out.println("Listening on port " + socket.getLocalPort());
@@ -57,7 +57,8 @@ public class AdminClient {
             while (true) {
                 System.out.print("> ");
                 String input = scanner.nextLine().trim();
-                if (input.isEmpty()) continue;
+                if (input.isEmpty())
+                    continue;
 
                 String[] tokens = input.split(" ", 2);
                 String cmd = tokens[0].toUpperCase();
@@ -66,15 +67,24 @@ public class AdminClient {
 
                 switch (cmd) {
                     case "CREATE":
-                        if (tokens.length < 2) { System.out.println("Usage: create <groupName>"); continue; }
+                        if (tokens.length < 2) {
+                            System.out.println("Usage: create <groupName>");
+                            continue;
+                        }
                         msgToSend = "CREATE_GROUP|" + adminName + "|" + tokens[1].trim();
                         break;
 
                     case "ALERT":
                         // alert <groupName|ALL> <message...>
-                        if (tokens.length < 2) { System.out.println("Usage: alert <groupName|ALL> <message>"); continue; }
+                        if (tokens.length < 2) {
+                            System.out.println("Usage: alert <groupName|ALL> <message>");
+                            continue;
+                        }
                         String[] alertParts = tokens[1].split(" ", 2);
-                        if (alertParts.length < 2) { System.out.println("Usage: alert <groupName|ALL> <message>"); continue; }
+                        if (alertParts.length < 2) {
+                            System.out.println("Usage: alert <groupName|ALL> <message>");
+                            continue;
+                        }
                         msgToSend = "ALERT|" + adminName + "|" + alertParts[0] + "|" + alertParts[1];
                         break;
 
@@ -84,9 +94,15 @@ public class AdminClient {
 
                     case "REPLY":
                         // reply <questionId> <text...>
-                        if (tokens.length < 2) { System.out.println("Usage: reply <questionId> <replyText>"); continue; }
+                        if (tokens.length < 2) {
+                            System.out.println("Usage: reply <questionId> <replyText>");
+                            continue;
+                        }
                         String[] replyParts = tokens[1].split(" ", 2);
-                        if (replyParts.length < 2) { System.out.println("Usage: reply <questionId> <replyText>"); continue; }
+                        if (replyParts.length < 2) {
+                            System.out.println("Usage: reply <questionId> <replyText>");
+                            continue;
+                        }
                         msgToSend = "REPLY|" + adminName + "|" + replyParts[0] + "|" + replyParts[1];
                         break;
 
@@ -120,7 +136,8 @@ public class AdminClient {
         } catch (IOException e) {
             System.out.println("IO error: " + e.getMessage());
         } finally {
-            if (socket != null) socket.close();
+            if (socket != null)
+                socket.close();
         }
     }
 
@@ -128,7 +145,7 @@ public class AdminClient {
     // Send a UDP packet and wait for a single reply
     // -------------------------------------------------------------------------
     static String sendAndReceive(DatagramSocket socket, String msg,
-                                  InetAddress serverAddr, int serverPort) throws IOException {
+            InetAddress serverAddr, int serverPort) throws IOException {
         byte[] data = msg.getBytes("UTF-8");
         DatagramPacket request = new DatagramPacket(data, data.length, serverAddr, serverPort);
         socket.send(request);
